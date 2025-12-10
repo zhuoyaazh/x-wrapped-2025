@@ -1,9 +1,9 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
-export default function CallbackPage() {
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -39,4 +39,12 @@ export default function CallbackPage() {
   }, [searchParams, router]);
 
   return <div className="min-h-screen bg-black text-white flex justify-center items-center">Authenticating...</div>;
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black text-white flex justify-center items-center">Loading...</div>}>
+      <CallbackContent />
+    </Suspense>
+  );
 }
