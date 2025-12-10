@@ -21,7 +21,9 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ accessToken });
-  } catch {
-    return NextResponse.json({ error: 'OAuth failed' }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('OAuth callback error:', errorMsg, error);
+    return NextResponse.json({ error: `OAuth failed: ${errorMsg}` }, { status: 500 });
   }
 }
