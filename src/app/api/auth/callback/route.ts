@@ -8,6 +8,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing code or verifier' }, { status: 400 });
   }
 
+  const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/callback`;
+  console.log('OAuth Callback Debug:', {
+    hasCode: !!code,
+    hasVerifier: !!codeVerifier,
+    redirectUri,
+    clientId: process.env.TWITTER_CLIENT_ID,
+  });
+
   try {
     const client = new TwitterApi({
       clientId: process.env.TWITTER_CLIENT_ID!,
@@ -17,7 +25,7 @@ export async function POST(request: NextRequest) {
     const { accessToken } = await client.loginWithOAuth2({
       code,
       codeVerifier,
-      redirectUri: `${process.env.NEXT_PUBLIC_BASE_URL}/callback`,
+      redirectUri,
     });
 
     return NextResponse.json({ accessToken });
