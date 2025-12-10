@@ -7,10 +7,10 @@ export async function GET() {
     clientSecret: process.env.TWITTER_CLIENT_SECRET!,
   });
 
-  const { url, codeVerifier } = client.generateOAuth2AuthLink(
+  const { url, codeVerifier, state } = client.generateOAuth2AuthLink(
     `${process.env.NEXT_PUBLIC_BASE_URL}/callback`,
-    { scope: ['tweet.read', 'users.read', 'offline.access'] }
+    { scope: ['tweet.read', 'users.read'] }
   );
 
-  return NextResponse.json({ url, codeVerifier, state: 'state' });
+  return NextResponse.json({ url, codeVerifier, state });
 }
