@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       while (page < maxPages) {
         const timeline = await userClient.v2.userTimeline(me.data.id, {
           'tweet.fields': ['public_metrics', 'created_at', 'text'],
-          max_results: 100, // Back to 100, but only 1 page
+          max_results: 20, // Back to 100, but only 1 page
           pagination_token: paginationToken,
         });
 
