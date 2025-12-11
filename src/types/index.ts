@@ -27,4 +27,5 @@ export interface WrappedData {
     percentage: number;
   };
   motivationalQuote: string;
+  warnings?: string[]; // e.g., rate limit -> data partial
 }
