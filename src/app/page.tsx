@@ -5,7 +5,6 @@ export default function Home() {
   const handleLogin = async () => {
     try {
       const { data } = await axios.get('/api/auth/login');
-      // Simpan verifier & state buat security check nanti
       localStorage.setItem('codeVerifier', data.codeVerifier);
       localStorage.setItem('state', data.state);
       window.location.href = data.url;

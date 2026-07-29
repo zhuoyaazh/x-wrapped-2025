@@ -24,27 +24,24 @@ export default function Dashboard() {
           const parsed = JSON.parse(cachedData);
           setData(parsed);
           setLoading(false);
-          return; // Use cached data, don't fetch
+          return; 
         } catch {
           console.warn('Cache parse failed, fetching fresh...');
         }
       }
 
-      // No cache or parse failed, fetch from API
       try {
         const res = await axios.post('/api/analyze', { 
           accessToken: token,
-          useCache: !!cachedData, // Tell backend we have cache
+          useCache: !!cachedData, 
         });
         
-        // If backend signals cache is ok, don't process further
         if (res.data.cached) {
           console.log('Backend confirmed cache is valid');
           return;
         }
 
         setData(res.data);
-        // Save to localStorage for next visit
         localStorage.setItem('wrappedData', JSON.stringify(res.data));
       } catch (err) {
         console.error(err);

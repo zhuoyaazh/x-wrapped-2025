@@ -23,7 +23,6 @@ function CallbackContent() {
       return;
     }
 
-    // Proceed with OAuth callback
     axios.post('/api/auth/callback', { code, codeVerifier })
       .then((res) => {
         localStorage.setItem('accessToken', res.data.accessToken);

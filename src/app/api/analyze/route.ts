@@ -7,10 +7,8 @@ export async function POST(request: NextRequest) {
 
   if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // If useCache is true and we have cached wrapped data, return it immediately
   if (useCache) {
     console.log('Using cache requested — returning cached data from frontend');
-    // Frontend should handle this; backend just signals it's ok to use cache
     return NextResponse.json({ cached: true }, { status: 200 });
   }
 
@@ -18,16 +16,14 @@ export async function POST(request: NextRequest) {
     const client = new TwitterApi(accessToken);
     const userClient = client.readOnly;
 
-    // 1. Get User Info
     const me = await userClient.v2.me({
       'user.fields': ['profile_image_url', 'public_metrics']
     });
 
-    // 2. Fetch Tweets 2025 with minimal pagination (1 page = 100 tweets, stop if <2025)
     const tweets: TweetV2[] = [];
     const warnings: string[] = [];
     let paginationToken: string | undefined;
-    const maxPages = 1; // ONE page only to minimize rate limit
+    const maxPages = 1; 
     let page = 0;
     const delayMs = 500;
 
@@ -35,7 +31,7 @@ export async function POST(request: NextRequest) {
       while (page < maxPages) {
         const timeline = await userClient.v2.userTimeline(me.data.id, {
           'tweet.fields': ['public_metrics', 'created_at', 'text'],
-          max_results: 20, // Back to 100, but only 1 page
+          max_results: 20, 
           pagination_token: paginationToken,
         });
 
@@ -50,17 +46,13 @@ export async function POST(request: NextRequest) {
         paginationToken = timeline.data.meta.next_token;
         page += 1;
 
-        // Stop if no more pages
         if (!paginationToken) break;
 
-        // Stop early if oldest tweet in this page is before 2025
         const oldest = rawTweets[rawTweets.length - 1];
         if (oldest?.created_at) {
           const oldestYear = new Date(oldest.created_at).getUTCFullYear();
           if (oldestYear < 2025) break;
         }
-
-        // Small delay to reduce rate-limit risk
         await new Promise(res => setTimeout(res, delayMs));
       }
     } catch (error: unknown) {
@@ -76,7 +68,6 @@ export async function POST(request: NextRequest) {
 
     console.log(`Fetched ${tweets.length} tweets from 2025 (pages fetched: ${page})`);
 
-    // If still empty, return early with warning so UI shows clear message
     if (tweets.length === 0) {
       const emptyResult: WrappedData = {
         user: me.data,
@@ -101,9 +92,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(emptyResult, { status: 200 });
     }
 
-    // --- ADVANCED ANALYTICS ---
-
-    // Calculate totals
     let totalLikes = 0;
     let totalRTs = 0;
     let totalReplies = 0;
@@ -115,13 +103,11 @@ export async function POST(request: NextRequest) {
       totalRTs += t.public_metrics?.retweet_count || 0;
       totalReplies += t.public_metrics?.reply_count || 0;
 
-      // Track posting hours
       if (t.created_at) {
         const hour = new Date(t.created_at).getHours();
         hourCounts[hour] = (hourCounts[hour] || 0) + 1;
       }
 
-      // Simple topic extraction (kata-kata penting)
       const words = t.text.toLowerCase().match(/\b\w{4,}\b/g) || [];
       words.forEach((word: string) => {
         if (!['https', 'http', 'with', 'that', 'this', 'from', 'have', 'been', 'will', 'your', 'just', 'like', 'what', 'when', 'they'].includes(word)) {
@@ -130,17 +116,14 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    // Most active hour
     const mostActiveHour = Object.entries(hourCounts)
       .sort(([, a], [, b]) => b - a)[0]?.[0] || '20';
 
-    // Dominant topics (top 3)
     const dominantTopics = Object.entries(topicKeywords)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 3)
       .map(([word]) => word);
 
-    // Sort by engagement (likes + RTs + replies)
     const sortedByEngagement = [...tweets].sort((a, b) => {
       const engA = (a.public_metrics?.like_count || 0) + 
                    (a.public_metrics?.retweet_count || 0) + 
@@ -151,16 +134,13 @@ export async function POST(request: NextRequest) {
       return engB - engA;
     });
 
-    // Top 3 tweets
     const topTweets = sortedByEngagement.slice(0, 3);
 
-    // Viral tweets (250+ likes)
     const viralTweets = tweets.filter(t => (t.public_metrics?.like_count || 0) >= 250)
       .sort((a, b) => (b.public_metrics?.like_count || 0) - (a.public_metrics?.like_count || 0));
 
     console.log(`Found ${viralTweets.length} viral tweets (250+ likes)`);
 
-    // Account vibes analysis
     const avgEngagement = tweets.length > 0 ? (totalLikes + totalRTs) / tweets.length : 0;
     let vibes = { primary: 'Casual', description: 'Sharing thoughts and updates' };
     
@@ -179,7 +159,6 @@ export async function POST(request: NextRequest) {
       ? { trait: 'Consistent Poster', proof: `Posted ${tweets.length} times in 2025` }
       : { trait: 'Thoughtful Contributor', proof: `Shared ${tweets.length} quality posts` };
 
-    // Top emotion (simple sentiment based on engagement)
     const highEngagementRatio = viralTweets.length / Math.max(tweets.length, 1);
     const emotion = highEngagementRatio > 0.1
       ? { emotion: 'Excitement', percentage: Math.round(highEngagementRatio * 100) }
@@ -187,7 +166,6 @@ export async function POST(request: NextRequest) {
       ? { emotion: 'Joy', percentage: 70 }
       : { emotion: 'Calm', percentage: 60 };
 
-    // Motivational quote based on vibes
     const quotes: Record<string, string> = {
       'Influential': '🌟 "Your voice matters. Keep creating, keep inspiring."',
       'Engaging': '💫 "Connection is the heart of community. You\'re doing it right."',

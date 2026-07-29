@@ -19,8 +19,8 @@ export interface WrappedData {
     description: string;
   };
   accountSignature: {
-    trait: string; // Ciri khas
-    proof: string; // Bukti/contoh
+    trait: string; 
+    proof: string; 
   };
   topEmotion: {
     emotion: string; // e.g., "Joy", "Anger", "Excitement"
